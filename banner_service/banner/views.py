@@ -9,7 +9,7 @@ from rest_framework import mixins, permissions, viewsets
 from rest_framework.views import APIView
 
 from .models import Banner
-from .serializers import BannerSerializer
+from .serializers import UserBannerSerializer, BannerSerializer
 
 REDIS_PORT = os.environ.get("REDIS_PORT")
 REDIS_ENDPOINT = os.environ.get("REDIS_ENDPOINT")
@@ -24,11 +24,13 @@ class UserBannerView(APIView):
     http_method_names = ['get']
 
     def get(self, request):
-        tag_id = request.GET.get('tag_id')
-        feature_id = request.GET.get('feature_id')
-        if not tag_id or not feature_id:
+        serializer = UserBannerSerializer(data=request.GET)
+        if not serializer.is_valid():
             return JsonResponse({"error": "Некорректные данные"}, status=400)
-        use_last_revision = self.request.query_params.get('use_last_revision')
+        data = serializer.data
+        tag_id = data['tag_id']
+        feature_id = data['feature_id']
+        use_last_revision = data.get('use_last_revision', None)
         cache_key = f'banner_{tag_id}_{feature_id}'
         if use_last_revision:
             banner = get_object_or_404(

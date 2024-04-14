@@ -4,6 +4,12 @@ from django.db import transaction
 from .models import Banner, Feature, Tag
 
 
+class UserBannerSerializer(serializers.Serializer):
+    tag_id = serializers.IntegerField(required=True)
+    feature_id = serializers.IntegerField(required=True)
+    use_last_revision = serializers.BooleanField(required=False)
+
+
 class BannerSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     tag_ids = serializers.ListField(required=True, write_only=True, allow_null=True)
