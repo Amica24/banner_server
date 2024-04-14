@@ -1,0 +1,42 @@
+services:
+    db:
+        image: postgres:13-alpine
+        platform: linux/amd64
+        expose:
+            - 5432
+        ports:
+            - "5431:5432"
+        volumes:
+            - ./.docker/postgresql/:/var/lib/postgresql/data:rw
+        environment:
+            - POSTGRES_USER=admin
+            - POSTGRES_PASSWORD=admin123
+            - POSTGRES_DB=banner
+
+    redis:
+        image: redis:6.2.6-alpine
+        hostname: redis
+        container_name: redis
+        restart: unless-stopped
+        volumes:
+            - ../docker/redis-data:/data:rw
+        ports:
+            - "6379:6379"
+    backend:
+        command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+        #command: python3 ./manage.py runserver 0.0.0.0:8000"
+        container_name: banner-backend
+        build:
+            context: .
+        ports:
+            - "8080:8000"
+        depends_on:
+            - redis
+            - db
+        env_file:
+            - dev.env
+        volumes:
+            - ./banner_service:/srv:rw
+        restart: unless-stopped
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
